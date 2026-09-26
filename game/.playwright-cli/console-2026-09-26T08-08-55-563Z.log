@@ -1,0 +1,6 @@
+[      79ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:8767/favicon.ico:0
+[    8529ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:8767/favicon.ico:0
+[   43988ms] ReferenceError: l is not defined
+    at updateWorld (http://127.0.0.1:8767/:100:95)
+    at step (http://127.0.0.1:8767/:307:153)
+    at frame (http://127.0.0.1:8767/:308:120)

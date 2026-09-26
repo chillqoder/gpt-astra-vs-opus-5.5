@@ -1,0 +1,50 @@
+- generic [active] [ref=e1]:
+  - main "Interactive 3D skeleton samurai. Drag to orbit, scroll to zoom, right-drag to pan." [ref=e2]
+  - generic:
+    - banner:
+      - generic:
+        - generic: 黒
+        - generic: KURO
+      - generic:
+        - text: CHARACTER STUDIES
+        - text: VOL. 001 / THE SENTINEL
+    - generic:
+      - generic: THE WANDERING SENTINEL
+      - heading "Small form. Old soul." [level=1]:
+        - text: Small form.
+        - text: Old soul.
+      - paragraph:
+        - text: Bone, black steel, and a quiet resolve.
+        - text: A little warrior with a long story.
+      - generic: 彷徨う侍
+      - generic:
+        - generic:
+          - generic: ARMOR
+          - text: Obsidian steel
+        - generic:
+          - generic: SPIRIT
+          - text: Unbroken
+    - generic: FORM / SHADOW / SPIRIT
+    - generic: 01 / 01
+    - group [ref=e3]:
+      - generic "+ About this study" [ref=e4] [cursor=pointer]
+    - toolbar "Scene controls":
+      - button "Auto rotate" [disabled] [ref=e5]:
+        - img [ref=e6]
+        - generic [ref=e8]: Rotate
+      - button "Idle animation" [disabled] [pressed] [ref=e9]:
+        - img [ref=e10]
+        - generic [ref=e12]: Idle
+      - button "Switch to night studio" [disabled] [ref=e13]:
+        - img [ref=e14]
+      - button "Reset view" [disabled] [ref=e16]:
+        - img [ref=e17]
+      - button "Save image" [disabled] [ref=e19]:
+        - img [ref=e20]
+    - contentinfo:
+      - generic:
+        - generic: SCULPTING THE SENTINEL
+      - generic: DRAG TO ORBIT/SCROLL TO ZOOM/RIGHT-DRAG TO PAN
+      - generic: KURO © 2026
+    - status: ASSEMBLING THE SENTINEL
+    - status

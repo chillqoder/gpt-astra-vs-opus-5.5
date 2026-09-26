@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jidōhanbaiki</title>
+<meta name="description" content="A detailed, procedurally built 3D Japanese vending machine in Three.js.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0b0c0e; --ink: #e9e6e1; --muted: #8b8f96; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden; }
+  body { font-family: "M PLUS Rounded 1c", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  #app, canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #hint {
+    position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+    padding: 8px 14px; border-radius: 999px; background: rgba(20, 21, 24, 0.72); backdrop-filter: blur(6px);
+    color: var(--muted); font-size: 12.5px; letter-spacing: .02em; white-space: nowrap; pointer-events: none;
+    transition: opacity 1.2s ease 2s; max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis;
+  }
+  #hint b { color: var(--ink); font-weight: 800; }
+  #hint.fade { opacity: 0; }
+  #loader {
+    position: fixed; inset: 0; display: grid; place-content: center; gap: 14px; justify-items: center;
+    background: var(--bg); transition: opacity .8s ease; z-index: 2;
+  }
+  #loader.done { opacity: 0; pointer-events: none; }
+  #loader p { margin: 0; color: var(--muted); font-size: 14px; letter-spacing: .08em; }
+  .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #2a2c31; border-top-color: #d6102a; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 560px) { #hint .wide { display: none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="app"></div>
+<div id="loader"><div class="spinner"></div><p>自動販売機を準備中…</p></div>
+<div id="hint"><b>Drag</b> to orbit · <b>Scroll / pinch</b> to zoom<span class="wide"> · <b>Right-drag</b> to pan · <b>Click</b> a lit button · <b>Double-click</b> to reset</span></div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

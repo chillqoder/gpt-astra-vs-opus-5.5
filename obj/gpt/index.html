@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#171919"><meta name="description" content="Hiru — a lovingly detailed, interactive Japanese vending machine. A procedural Three.js object study."><link rel="icon" type="image/svg+xml" href="/favicon.svg"><title>HIRU — An everyday icon</title></head>
+<body>
+  <div id="app">
+    <header class="topbar"><a class="wordmark" href="./" aria-label="Hiru home">hiru<span class="brand-dot">®</span></a><span class="edition">ORDINARY OBJECTS, EXTRAORDINARY DETAILS</span><button id="about" class="text-button">About the object <span>↗</span></button></header>
+    <main>
+      <div id="viewer" aria-label="Interactive 3D Japanese vending machine. Drag to rotate and scroll to zoom."></div>
+      <section class="intro"><div class="eyebrow"><span></span> OBJECT STUDY — 001</div><h1>An everyday<br><em>icon.</em></h1><p>A little light on every corner.<br>A small moment, made extraordinary.</p><div class="intro-rule"></div><div class="japanese">いつもの街に、小さなしあわせ。</div><div class="translation">A little happiness in the everyday.</div></section>
+      <div class="object-tag"><span class="tag-line"></span><div><b>自動販売機</b><small>JIDŌHANBAIKI</small></div></div>
+      <div class="view-label"><span class="live-dot"></span><span id="view-name">STUDIO VIEW</span><span class="view-divider">/</span><span>1 : 1</span></div>
+      <div class="hint" id="hint"><svg viewBox="0 0 24 24" fill="none"><path d="M8 12V5a1.5 1.5 0 0 1 3 0v6-1a1.5 1.5 0 0 1 3 0v1a1.5 1.5 0 0 1 3 0v1a1.5 1.5 0 0 1 3 0v4c0 4-2 6-6 6h-1c-2 0-3-1-4-3l-4-5c-1-2 1-3 2-2l1 1Z" stroke="currentColor" stroke-width="1.3"/></svg>Drag to explore <span>·</span> Scroll to get closer</div>
+      <div class="toolbar" aria-label="Viewer controls"><button id="reset" title="Front view" aria-label="Reset to front view"><svg viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 0 5M4 4v6h6"/></svg></button><div class="control-divider"></div><button id="rotate" aria-pressed="true" title="Toggle automatic rotation" aria-label="Toggle automatic rotation"><svg viewBox="0 0 24 24"><path d="M8 4H4v4m0-4 5 5m7 11h4v-4m0 4-5-5M5 15a8 8 0 0 0 10 4M19 9A8 8 0 0 0 9 5"/></svg></button><button id="zoom-out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M7.5 10.5h6"/></svg></button><button id="zoom-in" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M7.5 10.5h6m-3-3v6"/></svg></button><div class="control-divider"></div><button id="lighting" title="Switch to midnight lighting" aria-label="Switch to midnight lighting"><svg viewBox="0 0 24 24"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg></button></div>
+      <div id="loading"><span class="loader"></span><span>Bringing a little corner of Japan to life</span></div>
+      <div id="toast" role="status" aria-live="polite"></div>
+    </main>
+    <footer><div><span class="footer-dot"></span> MADE OF SMALL DETAILS</div><div class="footer-center">20 drinks <span>·</span> Endless little discoveries</div><span class="footer-right">DESIGNED TO BE EXPLORED <span>↗</span></span></footer>
+    <dialog id="details"><button id="close-details" aria-label="Close details">×</button><div class="eyebrow">THE OBJECT / 001</div><h2>A familiar kind<br>of <em>wonder.</em></h2><p>Always there. Always glowing. Japan’s vending machines turn an ordinary street corner into a tiny ritual. Hiru is a tribute to that everyday magic.</p><dl><div><dt>FORM</dt><dd>Classic Japanese vending machine</dd></div><div><dt>DIMENSIONS</dt><dd>180 × 100 × 70 cm</dd></div><div><dt>FINISH</dt><dd>Candy red enamel · brushed steel</dd></div><div><dt>COLLECTION</dt><dd>20 original drinks · hot & cold</dd></div></dl><p class="detail-note">Every shape and label is made in code. Explore the back, get close to the details, or press a drink’s selection button for a little refreshment.</p><div class="swatches"><i></i><i></i><i></i><i></i><span>THE HIRU PALETTE</span></div></dialog>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body></html>

@@ -1,0 +1,63 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - img [ref=e4]
+      - text: insectary
+      - generic [ref=e6]: ®
+    - generic [ref=e7]: The living collection
+    - generic [ref=e10]: LIVE HABITAT
+  - generic:
+    - generic: A study in stillness
+    - heading "A small world, alive." [level=1]:
+      - text: A small world,
+      - emphasis: alive.
+    - paragraph:
+      - text: Six little lives. An entire world to discover.
+      - text: Slow down. Look a little closer.
+    - generic:
+      - generic: "01"
+      - text: THE FOREST FLOOR
+  - main "Interactive 3D glass insectarium. Drag to orbit, scroll to zoom, right-drag to pan." [ref=e11]:
+    - generic:
+      - text: Growing a little world…
+      - generic: PREPARING YOUR HABITAT
+  - navigation "Explore inhabitants" [ref=e13]:
+    - generic [ref=e14]: Meet the inhabitants
+    - button "Observe butterflies" [ref=e15] [cursor=pointer]:
+      - img [ref=e16]
+      - superscript [ref=e18]: "3"
+    - button "Observe stick insects" [ref=e19] [cursor=pointer]:
+      - img [ref=e20]
+      - superscript [ref=e22]: "2"
+    - button "Observe praying mantis" [ref=e23] [cursor=pointer]:
+      - img [ref=e24]
+      - superscript [ref=e26]: "1"
+  - generic: A LIVING WORLD, BUILT FROM NOTHING BUT LIGHT & GEOMETRY
+  - contentinfo [ref=e27]:
+    - generic [ref=e28]:
+      - generic [ref=e29]: "06"
+      - generic [ref=e30]:
+        - text: Living
+        - text: inhabitants
+      - generic [ref=e32]: "03"
+      - generic [ref=e33]:
+        - text: Remarkable
+        - text: species
+    - toolbar "Habitat controls" [ref=e34]:
+      - button "Pause animation" [ref=e35] [cursor=pointer]:
+        - img [ref=e36]
+        - generic [ref=e38]: Pause
+      - button "Switch to evening light" [ref=e40] [cursor=pointer]:
+        - img [ref=e41]
+        - generic [ref=e44]: Daylight
+      - button "Auto-orbit" [ref=e45] [cursor=pointer]:
+        - img [ref=e46]
+        - generic [ref=e48]: Auto-orbit
+      - button "Reset view" [ref=e50] [cursor=pointer]:
+        - img [ref=e51]
+      - button "Enter fullscreen" [ref=e54] [cursor=pointer]:
+        - img [ref=e55]
+    - generic [ref=e57]:
+      - generic [ref=e58]: Drag to explore
+      - generic [ref=e59]: Scroll to zoom
+  - status [ref=e60]

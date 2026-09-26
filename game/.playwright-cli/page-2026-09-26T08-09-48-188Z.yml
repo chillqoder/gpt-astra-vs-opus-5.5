@@ -1,0 +1,66 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: ϟ
+      - generic [ref=e6]:
+        - generic [ref=e7]: DUST & THUNDER
+        - generic [ref=e8]: INDEPENDENT ARCADE DIVISION / VOL. 01
+    - generic [ref=e9]:
+      - button "Toggle sound" [ref=e10] [cursor=pointer]: SOUND ON ♪
+      - button "Toggle fullscreen" [ref=e11] [cursor=pointer]: ⛶ FULLSCREEN
+  - generic [ref=e12]:
+    - generic "Dust and Thunder side-scrolling action game" [ref=e13]
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]: ONE COMMANDO. ZERO BACKUP.
+        - heading "DUST & THUNDER" [level=1] [ref=e17]:
+          - generic [ref=e18]: DUST &
+          - generic [ref=e19]: THUNDER
+        - paragraph [ref=e20]:
+          - text: A bad day to be the bad guys.
+          - text: Run, gun, and rescue your way to the citadel.
+        - button "START OPERATION →" [ref=e21] [cursor=pointer]:
+          - text: START OPERATION
+          - generic [ref=e22]: →
+        - paragraph [ref=e23]: PRESS ENTER · NO QUARTERS REQUIRED
+      - generic [ref=e24]:
+        - text: MISSION 01 / THE LONG WAY HOME
+        - strong [ref=e25]: SUNBURN OUTPOST
+        - text: 35° N 07° E // 0600 HRS
+  - generic [ref=e26]:
+    - generic [ref=e27]:
+      - text: 01 /
+      - strong [ref=e28]: "OPERATION: THE LONG WAY HOME"
+    - generic [ref=e29]:
+      - generic [ref=e30]: "01"
+      - generic [ref=e31]: "02"
+      - generic [ref=e32]: "03"
+      - generic [ref=e33]: "04"
+  - generic [ref=e34]:
+    - generic [ref=e35]:
+      - generic [ref=e36]: W A S D
+      - text: MOVE / AIM
+    - generic [ref=e37]:
+      - generic [ref=e38]: SPACE
+      - text: JUMP
+    - generic [ref=e39]:
+      - generic [ref=e40]: J
+      - text: FIRE
+    - generic [ref=e41]:
+      - generic [ref=e42]: K
+      - text: GRENADE
+    - generic [ref=e43]:
+      - generic [ref=e44]: L
+      - text: KNIFE
+    - generic [ref=e45]:
+      - generic [ref=e46]: E
+      - text: VEHICLE
+    - generic [ref=e47]:
+      - generic [ref=e48]: ESC
+      - text: PAUSE
+  - generic [ref=e49]:
+    - generic [ref=e50]: BUILT FROM PIXELS. POWERED BY PURE CHAOS.
+    - generic [ref=e51]:
+      - strong [ref=e52]: 1 PLAYER
+      - text: / KEYBOARD + GAMEPAD / HIGH SCORE
+      - strong [ref=e53]: "000000"

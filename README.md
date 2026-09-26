@@ -1,1 +1,0 @@
-# gpt-astra-vs-opus-5.5

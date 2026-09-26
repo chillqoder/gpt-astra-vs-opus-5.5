@@ -1,0 +1,2 @@
+[     503ms] [WARNING] sigmaRadians, 0.06, is too large and will clip, as it requested 30 samples when the maximum is set to 20 @ https://unpkg.com/three@0.160.0/build/three.module.js:16769
+[     511ms] [WARNING] sigmaRadians, 0.06, is too large and will clip, as it requested 30 samples when the maximum is set to 20 @ https://unpkg.com/three@0.160.0/build/three.module.js:16769

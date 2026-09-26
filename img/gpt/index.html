@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#eae9e3">
+  <meta name="description" content="Kuro — an interactive, entirely procedural skeleton samurai. Sculpted in geometry, dressed in black steel.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23292c29'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-size='40' fill='%23eae9e3'%3E黒%3C/text%3E%3C/svg%3E">
+  <title>KURO — The Wandering Sentinel</title>
+  <style>
+    :root{--ink:#292d29;--muted:#777b72;--line:#c8cbc0;--paper:#eae9e3;--accent:#53664b}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}button{font:inherit;color:inherit;cursor:pointer}button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:5px}button:disabled{cursor:wait;opacity:.5}
+    #scene{position:absolute;inset:0;touch-action:none;outline:none}#scene canvas{display:block;width:100%;height:100%;cursor:grab}#scene canvas:active{cursor:grabbing}.ui{position:absolute;inset:0;pointer-events:none}.ui button,.ui details{pointer-events:auto}
+    header{position:absolute;top:34px;left:42px;right:42px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:24px}.brand{display:flex;align-items:center;gap:12px}.seal{display:grid;place-items:center;width:34px;height:34px;background:var(--ink);color:var(--paper);font:22px serif;border-radius:2px}.wordmark{font-size:19px;font-weight:700;letter-spacing:5px}.edition{font:10px 'Courier New',monospace;letter-spacing:1.6px;text-align:right;line-height:1.7}.edition span{color:var(--muted)}
+    .intro{position:absolute;top:29%;left:6%;width:390px}.eyebrow{font:10px 'Courier New',monospace;letter-spacing:2px;color:var(--accent);display:flex;gap:11px;align-items:center}.eyebrow:before{content:'';width:22px;height:1px;background:var(--accent)}h1{font-size:clamp(54px,5.2vw,78px);line-height:.96;font-weight:400;letter-spacing:-5px;margin:26px 0 24px}.intro p{font-size:12px;line-height:1.9;color:var(--muted);max-width:220px;margin:0}.title-jp{font-family:serif;font-size:15px;letter-spacing:9px;margin-top:30px}.specs{display:flex;gap:28px;margin-top:47px}.spec{border-top:1px solid var(--line);padding-top:11px}.spec small{display:block;font:9px 'Courier New',monospace;letter-spacing:1px;color:var(--muted);margin-bottom:7px}.spec span{font-size:11px}
+    .vertical{position:absolute;right:42px;top:38%;writing-mode:vertical-rl;font:10px 'Courier New',monospace;letter-spacing:3px;color:var(--muted)}.vertical:before{content:'';display:inline-block;height:45px;border-left:1px solid var(--line);margin-bottom:20px}.index{position:absolute;right:42px;bottom:156px;font:11px 'Courier New',monospace;color:var(--muted)}.index b{font-size:25px;color:var(--ink);font-weight:400}
+    .toolbar{position:absolute;bottom:92px;left:58%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:6px;background:rgba(248,248,242,.8);border:1px solid rgba(120,125,110,.22);border-radius:13px;box-shadow:0 8px 30px #333a3010;backdrop-filter:blur(18px)}.tool{height:38px;min-width:40px;border:0;border-radius:8px;background:transparent;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 13px;font-size:11px;white-space:nowrap;transition:background .2s}.tool:hover{background:#dfe3d8}.tool[aria-pressed=true]{background:var(--ink);color:#f2f3ec}.tool svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.separator{width:1px;height:20px;background:var(--line);margin:0 3px}.tool.icon-only{padding:0 11px}
+    footer{position:absolute;bottom:29px;left:42px;right:42px;border-top:1px solid var(--line);padding-top:19px;display:flex;justify-content:space-between;align-items:center;font:9px 'Courier New',monospace;letter-spacing:1.1px;color:var(--muted)}.status{display:flex;align-items:center;gap:8px}.dot{width:5px;height:5px;background:#708263;border-radius:50%}.hints{letter-spacing:.4px}.hints span{margin:0 9px;opacity:.4}.about{position:absolute;left:6%;bottom:108px;font-size:10px;color:var(--muted);max-width:235px}.about summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:7px}.about summary:before{content:'+';font-size:17px}.about[open] summary:before{content:'−'}.about p{font-size:11px;line-height:1.8;background:#eeeee8e8;padding:14px;border:1px solid var(--line);border-radius:7px;margin:10px 0 0}
+    #loading{position:absolute;left:58%;top:48%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);font:10px 'Courier New',monospace;letter-spacing:2px;transition:opacity .4s}.loader{height:26px;width:26px;margin:0 auto 15px;border:1px solid #b8c0af;border-top-color:var(--ink);border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}#toast{position:absolute;bottom:159px;left:58%;transform:translateX(-50%);font-size:11px;padding:9px 14px;background:var(--ink);color:var(--paper);border-radius:7px;opacity:0;transition:opacity .2s;white-space:nowrap}
+    body.night{--ink:#e5e6dd;--paper:#232924;--muted:#929e91;--line:#455045;--accent:#b5c5a8}body.night .toolbar{background:#313a30df}body.night .tool:hover{background:#455041}body.night .tool[aria-pressed=true]{color:#293228}body.night .about p{background:#293228ee}
+    @media(min-width:1600px){.intro{left:9%}.about{left:9%}}
+    @media(max-width:800px){header{top:23px;left:23px;right:23px;padding-bottom:19px}.intro{top:122px;left:27px;width:200px}h1{font-size:49px;letter-spacing:-3px;margin:15px 0}.intro p,.title-jp,.specs{display:none}.eyebrow{font-size:8px;letter-spacing:1.3px}.vertical{right:22px;font-size:8px;top:43%}.index{display:none}.toolbar{left:50%;bottom:82px}.about{left:24px;bottom:154px;max-width:180px}.about p{font-size:10px}.tool{padding:0 10px}footer{left:23px;right:23px;bottom:24px;padding-top:16px}.hints{display:none}#loading{left:50%;top:50%}#toast{left:50%;bottom:145px}.edition{font-size:8px}.wordmark{font-size:16px}.seal{width:29px;height:29px;font-size:20px}}
+    @media(max-height:620px) and (min-width:801px){.intro{top:25%}h1{font-size:57px}.specs,.title-jp{display:none}.toolbar{bottom:77px}.about{bottom:94px}footer{bottom:19px}.index{bottom:135px}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <main id="scene" aria-label="Interactive 3D skeleton samurai. Drag to orbit, scroll to zoom, right-drag to pan." tabindex="0"></main>
+  <div class="ui">
+    <header><div class="brand"><span class="seal" aria-hidden="true">黒</span><span class="wordmark">KURO</span></div><div class="edition">CHARACTER STUDIES<br><span>VOL. 001 / THE SENTINEL</span></div></header>
+    <section class="intro"><div class="eyebrow">THE WANDERING SENTINEL</div><h1>Small form.<br>Old soul.</h1><p>Bone, black steel, and a quiet resolve.<br>A little warrior with a long story.</p><div class="title-jp" lang="ja">彷徨う侍</div><div class="specs"><div class="spec"><small>ARMOR</small><span>Obsidian steel</span></div><div class="spec"><small>SPIRIT</small><span>Unbroken</span></div></div></section>
+    <div class="vertical">FORM / SHADOW / SPIRIT</div><div class="index"><b>01</b> / 01</div>
+    <details class="about"><summary>About this study</summary><p>A skeleton ronin, built entirely from geometry. Curved horns, carved eye sockets, layered armor, and a wrapped katana — every detail is sculpted in code.<br><br>Drag to explore. Scroll or pinch to get closer. Right-drag or use two fingers to pan.</p></details>
+    <div class="toolbar" role="toolbar" aria-label="Scene controls">
+      <button class="tool" id="rotate" aria-label="Auto rotate" aria-pressed="false" title="Auto rotate (R)"><svg viewBox="0 0 24 24"><path d="M20 8a8 8 0 1 0 0 8M20 3v5h-5"/></svg><span>Rotate</span></button>
+      <button class="tool" id="idle" aria-label="Idle animation" aria-pressed="true" title="Idle animation (Space)"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg><span>Idle</span></button>
+      <div class="separator"></div>
+      <button class="tool icon-only" id="theme" aria-label="Switch to night studio" aria-pressed="false" title="Day / night studio"><svg viewBox="0 0 24 24"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg></button>
+      <button class="tool icon-only" id="reset" aria-label="Reset view" title="Reset view (0)"><svg viewBox="0 0 24 24"><path d="M4 10V4h6M4 4l6 6M20 14v6h-6m6 0-6-6"/></svg></button>
+      <button class="tool icon-only" id="capture" aria-label="Save image" title="Save scene as PNG"><svg viewBox="0 0 24 24"><path d="M8 5 6 8H3v12h18V8h-3l-2-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+    </div>
+    <footer><div class="status"><i class="dot"></i><span id="status">SCULPTING THE SENTINEL</span></div><div class="hints">DRAG TO ORBIT<span>/</span>SCROLL TO ZOOM<span>/</span>RIGHT-DRAG TO PAN</div><div>KURO © 2026</div></footer>
+    <div id="loading" role="status"><div class="loader"></div>ASSEMBLING THE SENTINEL</div><div id="toast" role="status"></div>
+  </div>
+  <script type="module">
+    // No textures, images, models, or non-Three.js dependencies are loaded.
+    const loading = document.querySelector('#loading');
+    const buttons = [...document.querySelectorAll('.tool')];
+    buttons.forEach(b => b.disabled = true);
+    try {
+      const THREE = await import('three');
+      const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+      const PI = Math.PI, V = (x,y,z) => new THREE.Vector3(x,y,z);
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color('#eae9e3');
+      scene.fog = new THREE.Fog('#eae9e3', 19, 42);
+      const renderer = new THREE.WebGLRenderer({antialias:true, alpha:false, preserveDrawingBuffer:true});
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.17;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      document.querySelector('#scene').appendChild(renderer.domElement);
+      const camera = new THREE.PerspectiveCamera(33, innerWidth/innerHeight, .1, 80);
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true; controls.dampingFactor = .075;
+      controls.minDistance = 4.8; controls.maxDistance = 20;
+      controls.maxPolarAngle = PI*.51; controls.minPolarAngle = .22;
+      controls.autoRotateSpeed = .65; controls.enablePan = true;
+
+      // A geometry-only studio becomes a soft reflection environment.
+      const studio = new THREE.Scene();
+      studio.background = new THREE.Color('#535b60');
+      function softbox(w,h,x,y,z,intensity){
+        const light = new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({color:new THREE.Color(intensity,intensity,intensity),side:THREE.DoubleSide}));
+        light.position.set(x,y,z); light.lookAt(0,2,0); studio.add(light);
+      }
+      softbox(5,9,-5,5,5,5); softbox(3,7,6,4,1,3); softbox(7,3,0,8,-2,4);
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const environment = pmrem.fromScene(studio,.025);
+      scene.environment = environment.texture;
+      studio.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose();}});pmrem.dispose();
+      const hemi = new THREE.HemisphereLight('#e8efff','#827866',2.1);scene.add(hemi);
+      const key = new THREE.DirectionalLight('#fff3dd',4.2);key.position.set(-3,7,5);key.castShadow=true;
+      key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-6;key.shadow.camera.right=6;key.shadow.camera.top=7;key.shadow.camera.bottom=-5;
+      key.shadow.normalBias=.025;key.shadow.bias=-.00015;key.shadow.radius=4;scene.add(key);
+      const fill = new THREE.DirectionalLight('#b9d4ff',2.2);fill.position.set(4,3,5);scene.add(fill);
+      const rim = new THREE.DirectionalLight('#f8e7c9',4);rim.position.set(2,6,-4);scene.add(rim);
+
+      // Shared materials and primitive geometry keep the sculpture inexpensive.
+      const material = (color,roughness=.4,metalness=.25) => new THREE.MeshStandardMaterial({color,roughness,metalness});
+      const M = {
+        bone:material('#f0f0e7',.37,.02), boneEdge:material('#dbdcd3',.43,.02),
+        armor:material('#171c20',.33,.68), armorEdge:material('#343b40',.3,.75),
+        lacquer:new THREE.MeshPhysicalMaterial({color:'#0c1115',roughness:.29,metalness:.62,clearcoat:.8,clearcoatRoughness:.22}),
+        leather:material('#131718',.65,.08), fabric:material('#212525',.91,.02),
+        pants:material('#393329',.92,.02), folds:material('#494033',.95,.01),
+        brass:material('#846340',.41,.7), stitch:material('#626156',.8,.1),
+        black:new THREE.MeshBasicMaterial({color:'#050609'}), socket:material('#07090c',.98,0),
+        sock:material('#e2e5df',.9,0), sole:material('#111618',.55,.2), crack:material('#a5a89f',.9,0)
+      };
+      const sphereGeo = new THREE.SphereGeometry(1,32,24);
+      function mesh(geo,mat,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+      function ellipsoid(parent,mat,pos,scale){const m=mesh(sphereGeo,mat,parent,...pos);m.scale.set(...scale);return m;}
+      function group(parent,x=0,y=0,z=0){const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);return g;}
+      const boxes = new Map();
+      function box(parent,mat,w,h,d,x,y,z,r=.035){
+        r=Math.min(r,w*.45,h*.45,d*.45);const id=[w,h,d,r].join(',');
+        if(!boxes.has(id)){
+          const s=new THREE.Shape(),a=w/2-r,b=h/2-r;
+          s.moveTo(-a,-h/2);s.lineTo(a,-h/2);s.quadraticCurveTo(w/2,-h/2,w/2,-b);s.lineTo(w/2,b);s.quadraticCurveTo(w/2,h/2,a,h/2);s.lineTo(-a,h/2);s.quadraticCurveTo(-w/2,h/2,-w/2,b);s.lineTo(-w/2,-b);s.quadraticCurveTo(-w/2,-h/2,-a,-h/2);
+          const geo=new THREE.ExtrudeGeometry(s,{depth:Math.max(.001,d-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r*.55,bevelSegments:2,steps:1,curveSegments:4});geo.translate(0,0,-d/2+r);boxes.set(id,geo);
+        }return mesh(boxes.get(id),mat,parent,x,y,z);
+      }
+      function tube(parent,mat,points,r=.025,closed=false,segments=32){const curve=new THREE.CatmullRomCurve3(points.map(p=>V(...p)),closed);return mesh(new THREE.TubeGeometry(curve,segments,r,7,closed),mat,parent);}
+      function rod(parent,mat,a,b,r=.025,r2=r){const A=V(...a),B=V(...b),dir=B.clone().sub(A);const m=mesh(new THREE.CylinderGeometry(r2,r,dir.length(),12),mat,parent,...A.clone().add(B).multiplyScalar(.5).toArray());m.quaternion.setFromUnitVectors(V(0,1,0),dir.normalize());return m;}
+      function rivet(parent,x,y,z,r=.023){return ellipsoid(parent,M.brass,[x,y,z],[r,r,r*.45]);}
+      function panel(parent,points,depth,mat,x=0,y=0,z=0,bevel=.025){const s=new THREE.Shape(points.map(p=>new THREE.Vector2(...p)));return mesh(new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:true,bevelThickness:bevel,bevelSize:bevel,bevelSegments:3,curveSegments:16}),mat,parent,x,y,z);}
+      function strap(parent,a,b,w=.13){const A=V(...a),B=V(...b),dir=B.clone().sub(A);const m=box(parent,M.leather,w,dir.length(),.065,...A.clone().add(B).multiplyScalar(.5).toArray(),.018);m.quaternion.setFromUnitVectors(V(0,1,0),dir.normalize());return m;}
+      function buckle(parent,x,y,z,w=.19,h=.16){box(parent,M.armorEdge,w,h,.058,x,y,z,.02);box(parent,M.leather,w-.046,h-.048,.061,x,y,z+.015,.008);rod(parent,M.brass,[x-w*.3,y,z+.052],[x+w*.3,y,z+.052],.012);}
+
+      const warrior=group(scene);warrior.name='Kuro — procedural skeleton samurai';
+      const lower=group(warrior),body=group(warrior,0,2.38,0),head=group(warrior,0,3.87,0);
+
+      // Tabi socks, separated big toes, curved sandal straps, and gathered trousers.
+      for(const side of [-1,1]){
+        const leg=group(lower,side*.43,0,0);leg.rotation.y=side*.075;
+        ellipsoid(leg,M.pants,[0,1.04,0],[.30,.53,.29]);
+        ellipsoid(leg,M.pants,[0,1.40,0],[.33,.43,.32]);
+        for(let j=0;j<5;j++){
+          tube(leg,M.folds,[[-.22,.77+j*.13,.16],[-.09,.74+j*.13,.282],[.12,.79+j*.13,.26],[.23,.84+j*.13,.14]],.018,false,16);
+        }
+        const cuff=mesh(new THREE.CylinderGeometry(.252,.229,.14,24),M.pants,leg,0,.71,0);
+        ellipsoid(leg,M.sock,[0,.47,.015],[.188,.30,.175]);
+        for(let j=0;j<3;j++){const ring=mesh(new THREE.TorusGeometry(.172,.009,6,28),M.boneEdge,leg,0,.56+j*.05,.018);ring.rotation.x=PI/2;}
+        ellipsoid(leg,M.sole,[0,.13,.17],[.34,.125,.49]);
+        ellipsoid(leg,M.armorEdge,[0,.10,.18],[.329,.037,.46]);
+        ellipsoid(leg,M.sock,[0,.23,.18],[.275,.115,.36]);
+        ellipsoid(leg,M.bone,[side*-.14,.25,.49],[.105,.07,.135]);
+        ellipsoid(leg,M.bone,[side*.073,.245,.48],[.147,.066,.13]);
+        box(leg,M.sole,.044,.07,.13,side*-.035,.27,.50,.015);
+        tube(leg,M.lacquer,[[side*-.035,.29,.46],[-.15,.37,.24],[-.29,.23,.07]],.071);
+        tube(leg,M.lacquer,[[side*-.035,.29,.46],[.16,.37,.24],[.28,.23,.07]],.071);
+        box(leg,M.leather,.51,.15,.20,0,.29,-.03,.045);
+      }
+
+      // Torso: an under-suit, overlapping chest plates and a raised neck guard.
+      ellipsoid(body,M.fabric,[0,0,-.035],[.70,.84,.43]);
+      box(body,M.leather,1.13,1.13,.71,0,-.02,0,.14);
+      for(let j=0;j<4;j++){
+        const y=.30-j*.24,w=.70+j*.06;
+        panel(body,[[-w/2,.11],[w/2,.11],[w*.40,-.11],[-w*.40,-.11]],.075,M.armor,0,y,.391);
+        box(body,M.armorEdge,w*.72,.025,.025,0,y-.085,.492,.007);
+      }
+      panel(body,[[-.25,.26],[.25,.26],[.19,-.17],[-.19,-.17]],.065,M.lacquer,0,.29,.48);
+      box(body,M.armorEdge,.19,.043,.032,0,.29,.559,.009);
+      for(const side of [-1,1]){
+        const collar=box(body,M.lacquer,.31,.50,.45,side*.40,.65,.05,.08);collar.rotation.z=side*-.37;
+        tube(body,M.armorEdge,[[side*.18,.45,.35],[side*.35,.73,.26],[side*.55,.83,.02],[side*.54,.62,-.20]],.025);
+        strap(body,[side*.56,.58,.29],[side*.24,-.40,.48],.18);
+        strap(body,[side*.53,.65,-.28],[side*.42,-.48,-.40],.14);
+        buckle(body,side*.40,.14,.52,.20,.17);
+        for(let j=0;j<4;j++){
+          const x=side*(.51-j*.042),y=.42-j*.12;
+          const loop=box(body,M.armorEdge,.205,.047,.04,x,y,.43+j*.023,.008);loop.rotation.z=side*.33;
+        }
+        const accent=box(body,M.brass,.052,.29,.025,side*.41,-.23,.493,.008);accent.rotation.z=-side*.49;
+        tube(body,M.leather,[[side*.55,.37,.31],[side*.73,.12,.32],[side*.58,-.19,.42]],.045);
+      }
+      // Back armor stays detailed when the viewer turns the sculpture around.
+      for(let j=0;j<5;j++){box(body,M.armor,1.01-j*.07,.17,.12,0,.38-j*.22,-.42,.045);box(body,M.armorEdge,.08,.12,.03,0,.38-j*.22,-.494,.01);}
+      box(body,M.leather,.42,.63,.19,.28,-.03,-.53,.07);
+      for(let j=0;j<3;j++)box(body,M.armorEdge,.34,.035,.025,.28,.13-j*.15,-.64,.009);
+
+      // Waist belts, brass keepers, utility pouches, and articulated kusazuri.
+      const waist=group(warrior,0,1.90,0);
+      ellipsoid(waist,M.leather,[0,0,0],[.76,.21,.45]);
+      for(let j=0;j<2;j++){
+        box(waist,M.leather,1.22,.135,.14,0,.07-j*.19,.47,.027);
+        box(waist,M.brass,.68,.044,.026,0,.07-j*.19,.55,.009);
+        buckle(waist,-.49,.07-j*.19,.56,.13,.14);buckle(waist,.49,.07-j*.19,.56,.13,.14);
+      }
+      for(let i=0;i<9;i++){
+        const angle=(i/9)*PI*2;
+        const skirt=group(waist,Math.sin(angle)*.63,-.40,Math.cos(angle)*.37);skirt.rotation.y=angle;skirt.rotation.x=-.14;
+        box(skirt,M.leather,.37,.66,.14,0,0,0,.035);
+        for(let j=0;j<3;j++){
+          box(skirt,M.armor,.32,.185,.068,0,.19-j*.19,.093,.022);
+          box(skirt,M.armorEdge,.26,.021,.022,0,.12-j*.19,.14,.006);
+          for(const s of [-1,1]){
+            rivet(skirt,s*.12,.22-j*.19,.135,.017);
+            rod(skirt,M.leather,[s*.095,.24-j*.19,.145],[s*.095,.12-j*.19,.149],.012);
+          }
+        }
+      }
+      for(const side of [-1,1]){
+        const pouch=group(waist,side*.53,-.16,.48);pouch.rotation.z=side*-.10;
+        box(pouch,M.leather,.27,.40,.22,0,0,0,.048);
+        box(pouch,M.armor,.275,.145,.06,0,.135,.13,.025);
+        box(pouch,M.armorEdge,.051,.26,.025,0,-.012,.132,.009);
+        buckle(pouch,0,.065,.176,.10,.093);
+        tube(pouch,M.stitch,[[-.105,.07,.121],[-.105,-.155,.121],[.10,-.155,.121],[.10,.07,.121]],.007);
+      }
+      // Knotted cord suspended over the center front panel.
+      tube(waist,M.stitch,[[-.065,-.25,.59],[-.10,-.34,.60],[-.13,-.47,.58],[-.08,-.55,.60]],.021);
+      tube(waist,M.stitch,[[.015,-.26,.60],[.085,-.36,.60],[.09,-.50,.61],[.15,-.55,.59]],.021);
+      ellipsoid(waist,M.brass,[0,-.25,.59],[.059,.040,.027]);
+
+      // Segmented shoulder lames, forearm splints, glove fingers and seam piping.
+      const arms=[];
+      for(const side of [-1,1]){
+        const arm=group(body,side*.77,.35,0);arms.push(arm);arm.rotation.z=side*.14;
+        ellipsoid(arm,M.fabric,[side*.02,-.34,0],[.285,.60,.29]);
+        for(let row=0;row<4;row++){
+          const armor=group(arm,side*(.025+row*.045),-.01-row*.145,.018);armor.rotation.z=side*.24;
+          for(let col=0;col<3;col++){
+            const theta=(col-1)*.62;
+            const plate=box(armor,M.armor,.20,.205,.12,Math.sin(theta)*.235,0,Math.cos(theta)*.27,.027);plate.rotation.y=theta;
+            const rim=box(armor,M.armorEdge,.176,.025,.025,Math.sin(theta)*.258,-.064,Math.cos(theta)*.336,.006);rim.rotation.y=theta;
+            rivet(armor,Math.sin(theta)*.25,.058,Math.cos(theta)*.338,.015);
+          }
+          box(armor,M.armor,.40,.19,.15,0,0,-.20,.025);
+        }
+        const forearm=group(arm,side*.08,-.79,.11);forearm.rotation.z=-side*.27;
+        ellipsoid(forearm,M.leather,[0,.025,0],[.25,.36,.25]);
+        for(let i=0;i<3;i++){
+          const splint=box(forearm,i===1?M.lacquer:M.armor,.12,.45,.13,(i-1)*.135,.04,.21,.035);splint.rotation.z=(i-1)*-.14;
+        }
+        for(const y of [-.12,.22]){
+          const band=mesh(new THREE.CylinderGeometry(.259,.26,.08,24),M.leather,forearm,0,y,0);
+          buckle(forearm,side*.19,y,.21,.105,.10);
+        }
+        ellipsoid(forearm,M.leather,[-side*.02,-.33,.02],[.22,.25,.235]);
+        for(let i=0;i<4;i++){
+          const x=(i-1.5)*.092;
+          ellipsoid(forearm,M.lacquer,[x,-.33,.208],[.055,.084,.045]);
+          const finger=box(forearm,M.leather,.085,.17,.13,x,-.45,.135,.031);finger.rotation.x=-.2;
+          box(forearm,M.armorEdge,.063,.022,.02,x,-.40,.212,.007);
+        }
+        ellipsoid(forearm,M.leather,[-side*.21,-.29,.17],[.096,.16,.12]);
+        tube(forearm,M.armorEdge,[[-.18,.20,.22],[-.20,-.10,.22],[-.13,-.23,.24],[.15,-.21,.24]],.014);
+      }
+
+      // A diagonal katana, sheathed behind the right shoulder.
+      const sword=group(body,0,-.07,-.51);sword.rotation.z=-.68;
+      ellipsoid(sword,M.lacquer,[0,-.22,0],[.094,1.58,.085]);
+      box(sword,M.lacquer,.17,2.55,.15,0,-.10,0,.06);
+      for(const y of [-1.34,-1.17,.77])box(sword,M.brass,.18,.055,.17,0,y,0,.016);
+      const guard=mesh(new THREE.CylinderGeometry(.235,.235,.053,8),M.armorEdge,sword,0,1.10,0);guard.scale.z=.70;
+      box(sword,M.brass,.13,.075,.14,0,1.18,0,.018);
+      box(sword,M.leather,.15,.67,.135,0,1.55,0,.028);
+      for(let j=0;j<7;j++){
+        const y=1.27+j*.085;
+        tube(sword,M.stitch,[[-.078,y,.074],[0,y+.07,.079],[.078,y,.074]],.022,false,8);
+        tube(sword,M.leather,[[-.078,y+.055,-.069],[0,y,-.079],[.078,y+.055,-.069]],.025,false,8);
+      }
+      box(sword,M.brass,.16,.06,.14,0,1.91,0,.02);
+      tube(body,M.leather,[[-.57,.49,-.38],[-.12,.18,-.65],[.50,-.36,-.42]],.05);
+
+      // Skull: a rounded cranium and beveled face with real recessed cavities.
+      ellipsoid(head,M.bone,[0,.035,-.24],[.82,.81,.59]);
+      ellipsoid(head,M.bone,[0,-.45,.015],[.54,.24,.34]);
+      const face=new THREE.Shape();
+      face.moveTo(0,.77);face.bezierCurveTo(.58,.80,.82,.56,.83,.20);
+      face.bezierCurveTo(.88,.02,.82,-.15,.70,-.22);face.quadraticCurveTo(.62,-.26,.59,-.40);
+      face.quadraticCurveTo(.56,-.47,.46,-.44);face.lineTo(.42,-.62);face.quadraticCurveTo(.34,-.71,.27,-.62);
+      face.lineTo(.24,-.48);face.lineTo(.15,-.51);face.lineTo(.13,-.68);face.quadraticCurveTo(.03,-.75,-.04,-.66);
+      face.lineTo(-.05,-.52);face.lineTo(-.14,-.51);face.lineTo(-.19,-.66);face.quadraticCurveTo(-.29,-.71,-.34,-.61);
+      face.lineTo(-.37,-.46);face.quadraticCurveTo(-.47,-.51,-.52,-.43);face.lineTo(-.59,-.28);
+      face.bezierCurveTo(-.86,-.23,-.89,.06,-.83,.24);face.bezierCurveTo(-.83,.60,-.54,.79,0,.77);
+      function eyePath(side){
+        const p=new THREE.Path();p.moveTo(side*.13,.17);
+        p.bezierCurveTo(side*.32,.19,side*.56,.24,side*.71,.31);
+        p.bezierCurveTo(side*.80,.03,side*.66,-.22,side*.42,-.21);
+        p.bezierCurveTo(side*.20,-.22,side*.12,-.07,side*.13,.17);return p;
+      }
+      const nose=new THREE.Path();nose.moveTo(-.105,-.28);nose.quadraticCurveTo(-.15,-.30,-.118,-.23);nose.lineTo(-.025,-.035);nose.quadraticCurveTo(0,.005,.027,-.04);nose.lineTo(.14,-.235);nose.quadraticCurveTo(.17,-.29,.105,-.30);nose.lineTo(.015,-.26);nose.closePath();
+      const holes=[eyePath(-1),eyePath(1),nose];face.holes.push(...holes);
+      mesh(new THREE.ExtrudeGeometry(face,{depth:.19,bevelEnabled:true,bevelSize:.048,bevelThickness:.055,bevelSegments:5,curveSegments:32}),M.bone,head,0,0,.24);
+      for(const hole of holes){
+        const pts=hole.getPoints(50);const shape=new THREE.Shape(pts);
+        mesh(new THREE.ShapeGeometry(shape),M.black,head,0,0,.373);
+        // Dark sloping walls remain visible at three-quarter and side angles.
+        const vertices=[],indices=[];
+        for(const p of pts){vertices.push(p.x,p.y,.435,p.x*.99,p.y*.99,.376);}
+        for(let i=0;i<pts.length-1;i++){const a=i*2;indices.push(a,a+1,a+2,a+1,a+3,a+2);}
+        const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();
+        const cavityMat=M.socket.clone();cavityMat.side=THREE.DoubleSide;mesh(geo,cavityMat,head);
+      }
+      // Fine cranial fissures and quiet cheek/jaw details.
+      tube(head,M.crack,[[-.49,.65,.474],[-.47,.53,.483],[-.53,.45,.48],[-.49,.36,.48]],.007,false,14);
+      tube(head,M.crack,[[-.47,.53,.485],[-.37,.50,.486],[-.34,.44,.486]],.005,false,8);
+      tube(head,M.boneEdge,[[.54,-.31,.473],[.48,-.35,.486],[.43,-.39,.483]],.011,false,12);
+      tube(head,M.boneEdge,[[-.52,-.32,.47],[-.47,-.38,.483],[-.42,-.40,.48]],.009,false,12);
+
+      // Broad lacquered kasa: curved profile, radial ribs, and subtle woven relief.
+      const hat=group(head,0,.64,-.01);
+      const profile=[[0,.76],[.065,.73],[.18,.65],[.42,.50],[.73,.33],[1.08,.15],[1.48,-.015],[1.55,-.048],[1.53,-.074],[1.40,-.07],[1.05,.085],[.70,.265],[.37,.45],[.13,.60],[0,.66]];
+      const hatGeo=new THREE.LatheGeometry(profile.map(p=>new THREE.Vector2(...p)),160);
+      // A deterministic small displacement catches light without any texture maps.
+      const hp=hatGeo.attributes.position;
+      for(let i=0;i<hp.count;i++){const x=hp.getX(i),z=hp.getZ(i),r=Math.hypot(x,z),a=Math.atan2(z,x);if(r>.15)hp.setY(i,hp.getY(i)+Math.sin(a*80+r*6)*.0018+Math.sin(r*130)*.0011);}
+      hatGeo.computeVertexNormals();mesh(hatGeo,M.lacquer,hat);
+      const brim=mesh(new THREE.TorusGeometry(1.535,.022,8,160),M.armorEdge,hat,0,-.053,0);brim.rotation.x=PI/2;
+      const hatY=r=>.75-.535*r;
+      for(let i=0;i<48;i++){
+        const a=i/48*PI*2;
+        tube(hat,i%4===0?M.armorEdge:M.lacquer,[.12,.45,.82,1.18,1.51].map(r=>[Math.sin(a)*r,hatY(r)+.008,Math.cos(a)*r]),i%4===0?.007:.004,false,12);
+      }
+      for(let j=0;j<11;j++){
+        const r=.39+j*.099;const ring=mesh(new THREE.TorusGeometry(r,.0035,4,128),M.armor,hat,0,hatY(r)+.003,0);ring.rotation.x=PI/2;
+      }
+      // Curved tapered horns use a swept mesh, with a few growth ridges at the base.
+      for(const side of [-1,1]){
+        const curve=new THREE.CatmullRomCurve3([V(side*.36,.49,.25),V(side*.43,.63,.26),V(side*.47,.83,.23),V(side*.47,1.04,.20),V(side*.43,1.22,.17)]);
+        const frames=curve.computeFrenetFrames(40,false),verts=[],normals=[],indices=[];
+        for(let j=0;j<=40;j++){
+          const t=j/40,p=curve.getPointAt(t),rad=.095*Math.pow(1-t,1.15)+.001;
+          for(let k=0;k<=16;k++){const a=k/16*PI*2;const n=frames.normals[j].clone().multiplyScalar(Math.cos(a)).addScaledVector(frames.binormals[j],Math.sin(a));const v=p.clone().addScaledVector(n,rad);verts.push(v.x,v.y,v.z);normals.push(n.x,n.y,n.z);if(j<40&&k<16){const q=j*17+k;indices.push(q,q+17,q+1,q+1,q+17,q+18);}}
+        }
+        const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));geo.setIndex(indices);mesh(geo,M.lacquer,hat);
+        for(let j=0;j<4;j++){const t=.035+j*.059,p=curve.getPointAt(t),ring=mesh(new THREE.TorusGeometry(.097*Math.pow(1-t,1.15),.006,5,24),M.armorEdge,hat,...p.toArray());ring.quaternion.setFromUnitVectors(V(0,0,1),curve.getTangentAt(t));}
+      }
+      // Short cords beneath the brim, behind the jaw.
+      for(const side of [-1,1])tube(head,M.leather,[[side*.72,.58,-.03],[side*.74,-.01,-.11],[side*.38,-.72,-.07]],.024);
+
+      // Ground and a geometry-only soft contact shadow anchor the silhouette.
+      const floor=mesh(new THREE.PlaneGeometry(200,200),material('#eae9e3',1,0),scene,0,-.015,0);floor.rotation.x=-PI/2;floor.castShadow=false;
+      const contact=new THREE.Mesh(new THREE.PlaneGeometry(4,3),new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{opacity:{value:.20}},vertexShader:'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'varying vec2 vUv; uniform float opacity; void main(){float r=length((vUv-.5)*2.0);gl_FragColor=vec4(.12,.15,.11,exp(-r*r*5.)*smoothstep(1.,.55,r)*opacity);}'}));contact.rotation.x=-PI/2;contact.position.y=.003;scene.add(contact);
+
+      // Responsive framing reserves a little negative space for the exhibit label.
+      let mobile=false;
+      function resetCamera(){
+        mobile=innerWidth<=800;controls.target.set(0,2.70,0);
+        camera.position.set(3.1,4.35,13.3);
+        if(mobile){camera.position.set(2.8,4.20,13.7);if(innerWidth/innerHeight>.72)camera.position.multiplyScalar(1.10);}
+        controls.update();
+      }
+      function resize(){
+        const wasMobile=mobile;mobile=innerWidth<=800;renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;
+        // Film offset is expressed as a view offset so orbiting keeps its natural center.
+        const offset=mobile?0:innerWidth*.085;
+        camera.setViewOffset(innerWidth,innerHeight,-offset,mobile?-innerHeight*.022:0,innerWidth,innerHeight);
+        camera.updateProjectionMatrix();if(wasMobile!==mobile)resetCamera();
+      }
+      resetCamera();resize();window.addEventListener('resize',resize);
+      const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+      let idle=!reduceMotion.matches,night=false,time=0,previous=performance.now();
+      const idleButton=document.querySelector('#idle'),rotateButton=document.querySelector('#rotate');
+      idleButton.setAttribute('aria-pressed',String(idle));
+      function toggleIdle(){idle=!idle;idleButton.setAttribute('aria-pressed',String(idle));}
+      function toggleRotation(){controls.autoRotate=!controls.autoRotate;rotateButton.setAttribute('aria-pressed',String(controls.autoRotate));}
+      idleButton.addEventListener('click',toggleIdle);rotateButton.addEventListener('click',toggleRotation);
+      document.querySelector('#reset').addEventListener('click',()=>{controls.autoRotate=false;rotateButton.setAttribute('aria-pressed','false');resetCamera();toast('View reset');});
+      document.querySelector('#theme').addEventListener('click',e=>{
+        night=!night;document.body.classList.toggle('night',night);e.currentTarget.setAttribute('aria-pressed',String(night));e.currentTarget.setAttribute('aria-label',night?'Switch to day studio':'Switch to night studio');
+        const color=night?'#232924':'#eae9e3';scene.background.set(color);scene.fog.color.set(color);floor.material.color.set(color);
+        hemi.intensity=night?1.1:2.1;key.intensity=night?3.3:4.2;fill.intensity=night?1.5:2.2;renderer.toneMappingExposure=night?1.05:1.17;
+      });
+      let toastTimer;function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.opacity=0,2100);}
+      document.querySelector('#capture').addEventListener('click',()=>{
+        renderer.render(scene,camera);renderer.domElement.toBlob(blob=>{if(!blob){toast('Image could not be saved');return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kuro-the-wandering-sentinel.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('Portrait saved');},'image/png');
+      });
+      window.addEventListener('keydown',e=>{if(e.target.closest('button,summary'))return;if(e.code==='Space'){e.preventDefault();toggleIdle();}if(e.code==='KeyR')toggleRotation();if(e.code==='Digit0')document.querySelector('#reset').click();});
+      renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();document.querySelector('#status').textContent='GRAPHICS PAUSED — RELOAD TO RESTORE';});
+      function animate(now){
+        const dt=Math.min((now-previous)/1000,.05);previous=now;if(idle)time+=dt;
+        const breath=Math.sin(time*1.55);body.scale.y=1+breath*.006;body.position.y=2.38+breath*.006;
+        head.position.y=3.87+Math.sin(time*1.55-.2)*.012;head.rotation.z=Math.sin(time*.7)*.009;
+        arms.forEach((arm,i)=>arm.rotation.z=(i===0?-1:1)*(.14+Math.sin(time*1.55+.8)*.01));
+        controls.update(dt);renderer.render(scene,camera);
+      }
+      renderer.setAnimationLoop(animate);
+      buttons.forEach(b=>b.disabled=false);document.querySelector('#status').textContent='REALTIME 3D / INTERACTIVE';loading.style.opacity=0;setTimeout(()=>loading.remove(),450);
+      // Read-only diagnostics make browser verification possible without dependencies.
+      window.kuro={scene,camera,controls,renderer,warrior,get idle(){return idle;}};
+    } catch(error) {
+      console.error('The scene could not be initialized:',error);
+      loading.replaceChildren();loading.textContent='Unable to start the 3D scene. Check your connection and WebGL support, then reload.';loading.style.maxWidth='300px';loading.style.lineHeight='1.8';
+      document.querySelector('#status').textContent='SCENE UNAVAILABLE';
+    }
+  </script>
+</body>
+</html>

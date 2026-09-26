@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Skull Ronin</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #e9e7e3; font-family: system-ui, sans-serif; }
+  canvas { display: block; }
+  #hint { position: fixed; left: 16px; bottom: 14px; color: #555; font-size: 12px; letter-spacing: .04em; user-select: none; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="hint">SKULL RONIN · drag to rotate · scroll to zoom · right-drag to pan</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* =========================================================================
+   Renderer / scene / camera
+   ========================================================================= */
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe9e7e3);
+scene.fog = new THREE.Fog(0xe9e7e3, 18, 40);
+
+// Soft studio reflections so glossy black parts read as lacquer / plastic
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(4.6, 3.9, 8.2);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 2.55, 0);
+controls.enableDamping = true;
+controls.minDistance = 4;
+controls.maxDistance = 16;
+controls.maxPolarAngle = Math.PI * 0.55;
+controls.update();
+
+/* =========================================================================
+   Lighting
+   ========================================================================= */
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8278, 0.7));
+
+const key = new THREE.DirectionalLight(0xfff4e6, 2.6);
+key.position.set(5, 9, 6);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -4, right: 4, top: 6, bottom: -2, near: 1, far: 30 });
+key.shadow.bias = -0.0004;
+key.shadow.normalBias = 0.02;
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0xdfe8ff, 0.8);
+fill.position.set(-6, 3, 4);
+scene.add(fill);
+
+const rim1 = new THREE.DirectionalLight(0xffffff, 2.2);
+rim1.position.set(-4, 5, -6);
+scene.add(rim1);
+const rim2 = new THREE.DirectionalLight(0xffe2c0, 1.2);
+rim2.position.set(5, 3, -5);
+scene.add(rim2);
+
+/* =========================================================================
+   Helpers
+   ========================================================================= */
+// Deterministic RNG so the procedural details are identical every load
+function mulberry32(a) {
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const rand = mulberry32(1337);
+const rr = (a, b) => a + (b - a) * rand();
+const smooth = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+
+function mesh(geo, mat, parent, pos, rot, scl) {
+  const m = new THREE.Mesh(geo, mat);
+  if (pos) m.position.set(...pos);
+  if (rot) m.rotation.set(...rot);
+  if (scl) m.scale.set(...scl);
+  if (parent) parent.add(m);
+  return m;
+}
+
+/* =========================================================================
+   Materials
+   ========================================================================= */
+const M = {
+  bone:      new THREE.MeshPhysicalMaterial({ color: 0xf0ede6, roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.4, vertexColors: true }),
+  crack:     new THREE.MeshStandardMaterial({ color: 0x3a3632, roughness: 0.9 }),
+  hat:       new THREE.MeshPhysicalMaterial({ color: 0x111111, roughness: 0.32, clearcoat: 0.9, clearcoatRoughness: 0.2, side: THREE.DoubleSide }),
+  horn:      new THREE.MeshPhysicalMaterial({ color: 0x0c0c0c, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.12 }),
+  armor:     new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6, side: THREE.DoubleSide }),
+  armorDark: new THREE.MeshStandardMaterial({ color: 0x0f0f0f, roughness: 0.7, side: THREE.DoubleSide }),
+  armorGloss:new THREE.MeshPhysicalMaterial({ color: 0x141414, roughness: 0.28, clearcoat: 0.8, clearcoatRoughness: 0.2, side: THREE.DoubleSide }),
+  armorMid:  new THREE.MeshStandardMaterial({ color: 0x242424, roughness: 0.5 }),
+  tan:       new THREE.MeshStandardMaterial({ color: 0xc09060, roughness: 0.45, metalness: 0.25 }),
+  brown:     new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 }),
+  metal:     new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.3, metalness: 0.85 }),
+  gold:      new THREE.MeshStandardMaterial({ color: 0xb8893a, roughness: 0.3, metalness: 0.9 }),
+  pants:     new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: 0.85 }),
+  sock:      new THREE.MeshStandardMaterial({ color: 0xf2f2f0, roughness: 0.8 }),
+  sandal:    new THREE.MeshPhysicalMaterial({ color: 0x0e0e0e, roughness: 0.35, clearcoat: 0.6, side: THREE.DoubleSide }),
+  sole:      new THREE.MeshStandardMaterial({ color: 0xf4f4f2, roughness: 0.6 }),
+  lacquer:   new THREE.MeshPhysicalMaterial({ color: 0x0a0a0a, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08 }),
+  wrap:      new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: 0.9 }),
+};
+
+/* =========================================================================
+   Hierarchy
+   ========================================================================= */
+const character = new THREE.Group();          // root
+scene.add(character);
+const legs  = new THREE.Group(); character.add(legs);
+const torso = new THREE.Group(); character.add(torso);   // breathes (scaled)
+const armL  = new THREE.Group(); character.add(armL);
+const armR  = new THREE.Group(); character.add(armR);
+const headPivot = new THREE.Group(); headPivot.position.set(0, 2.62, 0); character.add(headPivot);
+const head  = new THREE.Group(); head.position.set(0, 0.73, 0); headPivot.add(head);
+const katana = new THREE.Group(); torso.add(katana);
+
+/* =========================================================================
+   Ground / display base
+   ========================================================================= */
+const ground = mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.18 }), scene, [0, -0.08, 0], [-Math.PI / 2, 0, 0]);
+ground.receiveShadow = true;
+const base = mesh(new THREE.CylinderGeometry(2.1, 2.2, 0.08, 96), new THREE.MeshPhysicalMaterial({ color: 0x1c1c1c, roughness: 0.25, clearcoat: 1 }), scene, [0, -0.04, 0]);
+base.receiveShadow = true;
+
+/* =========================================================================
+   HEAD — deformed sphere with real sunken eye sockets & nose (vertex colors)
+   ========================================================================= */
+(function buildSkull() {
+  const geo = new THREE.SphereGeometry(1, 180, 140);
+  const pos = geo.attributes.position;
+  const colors = new Float32Array(pos.count * 3);
+  const bone = new THREE.Color(0xf0ede6), black = new THREE.Color(0x070707), shade = new THREE.Color(0xc9c2b6);
+  const v = new THREE.Vector3(), c = new THREE.Color();
+
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    const { x, y, z } = v;
+
+    // --- socket mask (computed on the undeformed unit sphere, front only)
+    let socket = 0, rim = 0;
+    if (z > 0.2) {
+      // angry eyes: ellipse cut by a brow line that slopes down toward the nose
+      const dx = Math.abs(x) - 0.37, dy = y - 0.02;
+      const e = 1 - ((dx / 0.27) ** 2 + (dy / 0.22) ** 2);
+      const brow = 0.11 + 0.42 * dx - dy;
+      const eye = Math.min(e * 0.25, brow);
+      socket = smooth(0.0, 0.035, eye);
+      rim = smooth(-0.07, 0.0, eye);
+
+      // nose: small inverted rounded triangle
+      const ny = y + 0.3;
+      const nd = Math.min(0.045 - ny, ny + 0.12, 0.08 * (ny + 0.12) / 0.165 - Math.abs(x));
+      socket = Math.max(socket, smooth(0.0, 0.015, nd));
+      rim = Math.max(rim, smooth(-0.04, 0.0, nd));
+
+      // faint teeth line along the jaw
+      const ty = y + 0.56;
+      if (Math.abs(x) < 0.34 && Math.abs(ty) < 0.012) rim = Math.max(rim, 0.55);
+      if (Math.abs(x) < 0.3 && ty < 0.0 && ty > -0.14 && Math.abs(((x + 1) % 0.085) - 0.0425) < 0.006) rim = Math.max(rim, 0.4);
+    }
+
+    // --- shape: wide cranium, tapered jaw, cheekbone bulge
+    let nx = x, ny = y, nz = z;
+    if (y < 0) { const t = -y; nx *= 1 - 0.24 * t * t; nz *= 1 - 0.1 * t * t; ny *= 1.12; }
+    const cheek = Math.exp(-(((Math.abs(x) - 0.55) / 0.2) ** 2 + ((y + 0.22) / 0.15) ** 2)) * (z > 0 ? 1 : 0);
+    nx *= 1.08;
+    const n = new THREE.Vector3(x, y, z);
+    const r = 1 + cheek * 0.03 - socket * 0.13;
+    v.set(nx, ny, nz).addScaledVector(n, r - 1);
+    pos.setXYZ(i, v.x, v.y, v.z);
+
+    c.copy(bone).lerp(shade, rim * 0.7).lerp(black, socket);
+    colors.set([c.r, c.g, c.b], i * 3);
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+  mesh(geo, M.bone, head, [0, 0, 0], null, [0.95, 0.95, 0.95]);
+
+  // Hairline cracks on the temple and cheek (tubes that crawl over the surface)
+  const surf = (d) => { // unit dir -> deformed skull surface
+    const p = d.clone();
+    if (p.y < 0) { const t = -p.y; p.x *= 1 - 0.24 * t * t; p.z *= 1 - 0.1 * t * t; p.y *= 1.12; }
+    p.x *= 1.08; return p.multiplyScalar(0.95 * 1.004);
+  };
+  const crack = (start, steps, dir) => {
+    const pts = []; const d = start.clone().normalize(); const step = dir.clone();
+    for (let s = 0; s < steps; s++) {
+      pts.push(surf(d));
+      step.applyAxisAngle(d, rr(-0.7, 0.7));
+      d.addScaledVector(step, 0.045).normalize();
+    }
+    const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), steps * 3, 0.007, 5, false);
+    mesh(g, M.crack, head);
+  };
+  crack(new THREE.Vector3(0.75, 0.35, 0.55), 9, new THREE.Vector3(0.2, -1, 0.3));
+  crack(new THREE.Vector3(0.72, 0.1, 0.62), 5, new THREE.Vector3(1, 0.4, -0.3));
+  crack(new THREE.Vector3(-0.55, -0.35, 0.72), 6, new THREE.Vector3(-0.6, 0.6, 0));
+})();
+
+/* =========================================================================
+   HAT — wide conical kasa with procedural straw ribs + two demon horns
+   ========================================================================= */
+(function buildHat() {
+  const hat = new THREE.Group(); hat.position.set(0, 0.36, 0); head.add(hat);
+  const R = 1.95, H = 0.78;
+  const g = new THREE.ConeGeometry(R, H, 200, 30, true);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const r = Math.hypot(x, z); if (r < 1e-4) continue;
+    const a = Math.atan2(z, x);
+    // radial ribs + concentric weave rings + slight random warp
+    const bump = 0.011 * Math.sin(a * 110) + 0.006 * Math.sin(r * 70) * Math.sin(a * 13) + 0.004 * Math.sin(a * 7 + r * 9);
+    p.setY(i, y + bump + 0.02 * Math.sin(a * 2 + 1) * (r / R));   // tiny droop / asymmetry
+  }
+  g.computeVertexNormals();
+  mesh(g, M.hat, hat, [0, H / 2, 0]);
+  mesh(new THREE.TorusGeometry(R, 0.03, 12, 200), M.hat, hat, [0, 0.005, 0], [Math.PI / 2, 0, 0]);         // rolled rim
+  mesh(new THREE.TorusGeometry(R * 0.55, 0.012, 8, 120), M.hat, hat, [0, H * 0.45, 0], [Math.PI / 2, 0, 0]); // weave ring
+  mesh(new THREE.TorusGeometry(R * 0.28, 0.01, 8, 90), M.hat, hat, [0, H * 0.72, 0], [Math.PI / 2, 0, 0]);
+  mesh(new THREE.SphereGeometry(0.07, 20, 12), M.hat, hat, [0, H + 0.01, 0]);                               // apex knob
+  // inner head band (hides the gap between skull and hat from low angles)
+  mesh(new THREE.CylinderGeometry(0.98, 1.0, 0.22, 64, 1, true), M.armorDark, hat, [0, 0.08, 0], null, [1, 1, 0.92]);
+
+  // Tapered, ridged horns
+  function horn(sign) {
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, -0.08, 0), new THREE.Vector3(0.05 * sign, 0.22, 0.02),
+      new THREE.Vector3(0.13 * sign, 0.48, 0), new THREE.Vector3(0.2 * sign, 0.72, -0.06),
+      new THREE.Vector3(0.3 * sign, 0.9, -0.14),
+    ]);
+    const TS = 64, RS = 18;
+    const hg = new THREE.TubeGeometry(curve, TS, 0.1, RS, false);
+    const hp = hg.attributes.position, P = new THREE.Vector3(), v = new THREE.Vector3();
+    for (let i = 0; i <= TS; i++) {
+      const t = i / TS; curve.getPointAt(t, P);
+      const s = (1 - t * 0.94) * (1 + 0.07 * Math.sin(t * 60) * (1 - t));   // taper + growth ridges
+      for (let j = 0; j <= RS; j++) {
+        const k = i * (RS + 1) + j;
+        v.fromBufferAttribute(hp, k).sub(P).multiplyScalar(s).add(P);
+        hp.setXYZ(k, v.x, v.y, v.z);
+      }
+    }
+    hg.computeVertexNormals();
+    const hGroup = new THREE.Group();
+    const rBase = 0.44, yBase = H * (1 - rBase / R);
+    hGroup.position.set(rBase * sign, yBase, 0.05);
+    hGroup.rotation.z = -0.15 * sign;
+    hat.add(hGroup);
+    mesh(hg, M.horn, hGroup);
+    mesh(new THREE.TorusGeometry(0.105, 0.03, 10, 28), M.horn, hGroup, [0, -0.02, 0], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.06, 24), M.horn, hGroup, [0, -0.06, 0]);
+  }
+  horn(1); horn(-1);
+})();
+
+/* =========================================================================
+   TORSO — long armored coat built as a lathe; plates conform to its surface
+   ========================================================================= */
+const COAT_Z = 0.78;
+const profile = new THREE.SplineCurve([
+  new THREE.Vector2(1.14, 0.85), new THREE.Vector2(1.08, 1.05), new THREE.Vector2(1.0, 1.32),
+  new THREE.Vector2(0.97, 1.58), new THREE.Vector2(0.99, 1.85), new THREE.Vector2(1.03, 2.1),
+  new THREE.Vector2(0.96, 2.32), new THREE.Vector2(0.76, 2.46), new THREE.Vector2(0.58, 2.53),
+]).getPoints(60);
+function coatR(y) {
+  for (let i = 0; i < profile.length - 1; i++) {
+    const a = profile[i], b = profile[i + 1];
+    if (y >= a.y && y <= b.y) return a.x + (b.x - a.x) * (y - a.y) / (b.y - a.y);
+  }
+  return y < profile[0].y ? profile[0].x : profile.at(-1).x;
+}
+function surfPoint(phi, y, off = 0) {
+  const r = coatR(y) + off;
+  return new THREE.Vector3(Math.sin(phi) * r, y, Math.cos(phi) * r * COAT_Z);
+}
+function surfNormal(phi) { return new THREE.Vector3(Math.sin(phi), 0, Math.cos(phi) / COAT_Z).normalize(); }
+const _m4 = new THREE.Matrix4(), _o = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
+function onSurface(obj, phi, y, off = 0, roll = 0) {   // place & orient: local +Z = outward normal
+  obj.position.copy(surfPoint(phi, y, off));
+  obj.quaternion.setFromRotationMatrix(_m4.lookAt(surfNormal(phi), _o, _up));
+  if (roll) obj.rotateZ(roll);
+  return obj;
+}
+// A curved armor plate that follows the coat (closed profile => has thickness)
+function plate(y0, y1, phi0, phiLen, off, mat, thick = 0.03, parent = torso) {
+  const pts = [], n = 10;
+  for (let i = 0; i <= n; i++) { const y = y0 + (y1 - y0) * i / n; pts.push(new THREE.Vector2(coatR(y) + off, y)); }
+  for (let i = n; i >= 0; i--) { const y = y0 + (y1 - y0) * i / n; pts.push(new THREE.Vector2(coatR(y) + off - thick, y)); }
+  pts.push(pts[0].clone());
+  const g = new THREE.LatheGeometry(pts, Math.max(4, Math.ceil(phiLen * 30)), phi0, phiLen);
+  return mesh(g, mat, parent, null, null, [1, 1, COAT_Z]);
+}
+
+(function buildTorso() {
+  // Main coat body
+  mesh(new THREE.LatheGeometry(profile, 128), M.armor, torso, null, null, [1, 1, COAT_Z]);
+  mesh(new THREE.TorusGeometry(1.14, 0.035, 10, 128), M.armorGloss, torso, [0, 0.86, 0], [Math.PI / 2, 0, 0], [1, COAT_Z, 1]); // hem roll
+  mesh(new THREE.CircleGeometry(1.0, 48), M.armorDark, torso, [0, 1.05, 0], [Math.PI / 2, 0, 0], [1, COAT_Z, 1]);              // inner cap
+
+  // High layered collar
+  mesh(new THREE.CylinderGeometry(0.84, 0.7, 0.36, 64, 1, true), M.armorGloss, torso, [0, 2.62, 0], null, [1, 1, 0.86]);
+  mesh(new THREE.CylinderGeometry(0.9, 0.84, 0.08, 64, 1, true), M.armor, torso, [0, 2.82, 0], null, [1, 1, 0.86]);
+  mesh(new THREE.TorusGeometry(0.9, 0.025, 8, 64), M.armorGloss, torso, [0, 2.86, 0], [Math.PI / 2, 0, 0], [1, 0.86, 1]);
+  for (let i = 0; i < 16; i++) {  // collar ribs
+    const a = i / 16 * Math.PI * 2;
+    const rib = mesh(new THREE.BoxGeometry(0.05, 0.3, 0.03), M.armorDark, torso, [Math.sin(a) * 0.8, 2.64, Math.cos(a) * 0.8 * 0.86]);
+    rib.rotation.set(-0.35 * Math.cos(a), a, 0, 'YXZ');
+  }
+
+  // Chest plates (left/right) with tan diagonal bars
+  plate(1.72, 2.28, 0.1, 0.85, 0.045, M.armorGloss);
+  plate(1.72, 2.28, -0.95, 0.85, 0.045, M.armorGloss);
+  plate(2.02, 2.08, 0.12, 0.8, 0.055, M.armorDark, 0.02);
+  plate(2.02, 2.08, -0.92, 0.8, 0.055, M.armorDark, 0.02);
+  for (const s of [1, -1]) {
+    for (let k = 0; k < 2; k++) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.035, 0.03), M.tan);
+      onSurface(bar, s * (0.45 + k * 0.18), 1.88 - k * 0.1, 0.06, s * 0.5); torso.add(bar);
+    }
+    const vbar = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.26, 0.025), M.tan);
+    onSurface(vbar, s * 0.18, 2.14, 0.06); torso.add(vbar);
+  }
+  // Center sternum spine
+  for (let i = 0; i < 5; i++) {
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(0.16 - i * 0.012, 0.09, 0.05), M.armorMid);
+    onSurface(seg, 0, 2.2 - i * 0.11, 0.05); torso.add(seg);
+  }
+
+  // Belt: glossy band, tan trim, buckle, pouches
+  plate(1.5, 1.64, 0, Math.PI * 2, 0.04, M.armorGloss, 0.05);
+  plate(1.64, 1.67, -1.3, 2.6, 0.05, M.tan, 0.02);
+  const buckle = new THREE.Group(); onSurface(buckle, 0, 1.57, 0.06); torso.add(buckle);
+  mesh(new THREE.BoxGeometry(0.34, 0.2, 0.05), M.metal, buckle);
+  mesh(new THREE.BoxGeometry(0.24, 0.1, 0.06), M.armorDark, buckle);
+  mesh(new THREE.BoxGeometry(0.2, 0.025, 0.07), M.tan, buckle, [0, 0.05, 0]);
+  for (const phi of [-1.9, -1.35, -0.75, 0.75, 1.35, 1.9, 2.6, -2.6]) {   // belt pouches
+    const pouch = new THREE.Group(); onSurface(pouch, phi, 1.5, 0.1); torso.add(pouch);
+    const w = rr(0.18, 0.26), h = rr(0.2, 0.28);
+    mesh(new THREE.BoxGeometry(w, h, 0.12), M.armor, pouch);
+    mesh(new THREE.BoxGeometry(w + 0.02, h * 0.35, 0.13), M.armorGloss, pouch, [0, h * 0.34, 0.005]);   // flap
+    mesh(new THREE.BoxGeometry(0.04, 0.05, 0.02), rand() < 0.5 ? M.tan : M.metal, pouch, [0, h * 0.2, 0.075]); // snap
+  }
+
+  // Front skirt: center panel with the dark arched "gate"
+  plate(0.9, 1.48, -0.38, 0.76, 0.05, M.armorGloss);
+  const gateShape = new THREE.Shape();
+  gateShape.moveTo(-0.26, 0); gateShape.lineTo(0.26, 0); gateShape.lineTo(0.26, 0.42); gateShape.lineTo(-0.26, 0.42); gateShape.lineTo(-0.26, 0);
+  const hole = new THREE.Path();
+  hole.moveTo(-0.14, 0.02); hole.lineTo(-0.14, 0.2); hole.absarc(0, 0.2, 0.14, Math.PI, 0, true); hole.lineTo(0.14, 0.02); hole.lineTo(-0.14, 0.02);
+  gateShape.holes.push(hole);
+  const gate = new THREE.Mesh(new THREE.ExtrudeGeometry(gateShape, { depth: 0.06, bevelEnabled: true, bevelSize: 0.01, bevelThickness: 0.01, bevelSegments: 2 }), M.armorMid);
+  onSurface(gate, 0, 0.93, 0.04); torso.add(gate);
+  const gateInner = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.36), M.armorDark);
+  onSurface(gateInner, 0, 1.1, 0.07); torso.add(gateInner);
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.04, 0.05), M.tan);
+  onSurface(lintel, 0, 1.4, 0.09); torso.add(lintel);
+
+  // Layered side tassets with rivets
+  for (const s of [1, -1]) {
+    for (let k = 0; k < 3; k++) {
+      const p0 = s > 0 ? 0.42 + k * 0.52 : -0.42 - (k + 1) * 0.52 + 0.04;
+      plate(0.88, 1.46, p0, 0.48, 0.035 + k * 0.004, k % 2 ? M.armor : M.armorGloss);
+      for (let q = 0; q < 3; q++) {
+        const rv = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), M.tan);
+        onSurface(rv, p0 + 0.08 + q * 0.16, 1.4, 0.04); torso.add(rv);
+      }
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.025, 0.02), M.tan);
+      onSurface(strip, p0 + 0.24, 1.0 + k * 0.08, 0.045); torso.add(strip);
+    }
+  }
+  // Hip pockets (hands go here in the reference)
+  for (const s of [1, -1]) {
+    const pk = new THREE.Group(); onSurface(pk, s * 1.25, 1.2, 0.05); torso.add(pk);
+    mesh(new THREE.BoxGeometry(0.34, 0.36, 0.1), M.armorGloss, pk);
+    mesh(new THREE.BoxGeometry(0.3, 0.05, 0.11), M.armorDark, pk, [0, 0.12, 0]);
+  }
+
+  // Tactical greebles: small rectangular panels scattered over the coat
+  for (let i = 0; i < 140; i++) {
+    const phi = rr(-Math.PI, Math.PI), y = rr(1.0, 2.3);
+    if (Math.abs(phi) < 0.42 && y < 1.5) continue;               // keep gate clear
+    if (y > 1.46 && y < 1.7) continue;                           // keep belt clear
+    const w = rr(0.06, 0.22), h = rr(0.04, 0.18), d = rr(0.015, 0.05);
+    const r = rand();
+    const mat = r < 0.12 ? M.tan : r < 0.2 ? M.brown : r < 0.55 ? M.armorGloss : r < 0.8 ? M.armorMid : M.armorDark;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    onSurface(b, phi, y, 0.045 + d / 2, rand() < 0.2 ? rr(-0.6, 0.6) : 0); torso.add(b);
+  }
+
+  // Vertical seams
+  for (const phi of [0.95, -0.95, 2.2, -2.2, Math.PI]) {
+    const pts = []; for (let y = 0.9; y <= 2.35; y += 0.1) pts.push(surfPoint(phi, y, 0.012));
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 30, 0.01, 5), M.armorDark, torso);
+  }
+
+  // Katana strap: diagonal across the chest, from right shoulder to left hip
+  const strapPts = [];
+  for (let t = 0; t <= 1; t += 0.05) strapPts.push(surfPoint(THREE.MathUtils.lerp(0.95, -1.35, t), THREE.MathUtils.lerp(2.34, 1.35, t), 0.075));
+  const strapG = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(strapPts), 60, 0.035, 8);
+  mesh(strapG, M.armorGloss, torso, null, null, [1, 1, 1]);
+  for (const t of [0.3, 0.62]) {
+    const bk = new THREE.Group();
+    onSurface(bk, THREE.MathUtils.lerp(0.95, -1.35, t), THREE.MathUtils.lerp(2.34, 1.35, t), 0.1, 0.72); torso.add(bk);
+    mesh(new THREE.BoxGeometry(0.14, 0.1, 0.03), M.metal, bk);
+    mesh(new THREE.BoxGeometry(0.09, 0.05, 0.035), M.armorDark, bk);
+  }
+  // Back plate
+  plate(1.75, 2.3, Math.PI - 0.8, 1.6, 0.05, M.armorGloss);
+})();
+
+/* =========================================================================
+   KATANA — behind the back, handle over the right shoulder
+   ========================================================================= */
+(function buildKatana() {
+  const bottom = new THREE.Vector3(-1.5, 1.12, -0.95), top = new THREE.Vector3(1.08, 3.12, -0.9);
+  const dir = top.clone().sub(bottom); const L = dir.length(); dir.normalize();
+  katana.position.copy(bottom);
+  katana.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+  const sL = L * 0.74;
+  mesh(new THREE.CylinderGeometry(0.068, 0.075, sL, 24), M.lacquer, katana, [0, sL / 2, 0], null, [1.25, 1, 1]);     // saya
+  mesh(new THREE.SphereGeometry(0.076, 16, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.metal, katana, [0, 0, 0], null, [1.25, 0.8, 1]); // kojiri
+  for (const y of [sL * 0.78, sL * 0.84]) mesh(new THREE.TorusGeometry(0.078, 0.014, 8, 24), M.brown, katana, [0, y, 0], [Math.PI / 2, 0, 0], [1.25, 1, 1]); // sageo
+  mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.05, 24), M.armorMid, katana, [0, sL - 0.02, 0], null, [1.25, 1, 1]);   // koiguchi
+  mesh(new THREE.CylinderGeometry(0.058, 0.064, 0.05, 20), M.gold, katana, [0, sL + 0.03, 0], null, [1.2, 1, 1]);      // habaki / seppa
+  const tsuba = mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.03, 40), M.metal, katana, [0, sL + 0.07, 0], null, [1.2, 1, 1]);
+  for (let i = 0; i < 4; i++) { // tsuba cutouts suggestion
+    const a = i * Math.PI / 2 + Math.PI / 4;
+    mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.035, 12), M.armorDark, katana, [Math.cos(a) * 0.11 * 1.2, sL + 0.07, Math.sin(a) * 0.11]);
+  }
+  const hL = L - sL - 0.09, h0 = sL + 0.085;
+  mesh(new THREE.CylinderGeometry(0.052, 0.056, hL, 20), M.wrap, katana, [0, h0 + hL / 2, 0], null, [1.2, 1, 1]);     // tsuka core
+  // tsuka-ito: two opposing helices form the diamond wrap
+  for (const ph of [0, Math.PI]) for (const dirn of [1, -1]) {
+    const pts = [];
+    for (let t = 0; t <= 1.0001; t += 0.02) { const a = ph + dirn * t * Math.PI * 12; pts.push(new THREE.Vector3(Math.cos(a) * 0.062 * 1.2, h0 + t * hL, Math.sin(a) * 0.062)); }
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 200, 0.012, 5), M.armorDark, katana);
+  }
+  mesh(new THREE.BoxGeometry(0.04, 0.12, 0.03), M.gold, katana, [0.075, h0 + hL * 0.5, 0]);  // menuki
+  mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.06, 20), M.metal, katana, [0, h0 + hL + 0.02, 0], null, [1.2, 1, 1]);   // kashira
+  mesh(new THREE.SphereGeometry(0.05, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.metal, katana, [0, h0 + hL + 0.05, 0], null, [1.2, 0.5, 1]);
+})();
+
+/* =========================================================================
+   ARMS — layered pauldrons, segmented sleeves, gloved fists
+   ========================================================================= */
+function buildArm(group, s) {
+  group.position.set(1.02 * s, 2.28, 0);
+  group.rotation.z = 0.2 * s;
+  // Pauldrons: three stacked shell caps with tan edge bars
+  for (let k = 0; k < 3; k++) {
+    const cap = mesh(new THREE.SphereGeometry(0.44 - k * 0.02, 32, 12, 0, Math.PI * 2, 0, 1.15),
+      k === 1 ? M.armor : M.armorGloss, group, [0.06 * s, 0.1 - k * 0.2, 0], [0, 0, -0.35 * s], [1, 0.7, 0.95]);
+    const bar = mesh(new THREE.BoxGeometry(0.14, 0.03, 0.03), M.tan, group, [0.3 * s, -0.06 - k * 0.2, 0.3], [0, 0.4 * s, -0.4 * s]);
+    for (let q = -1; q <= 1; q++) mesh(new THREE.BoxGeometry(0.08, 0.05, 0.03), M.armorMid, group, [(0.12 + 0.12 * Math.abs(q)) * s, 0.02 - k * 0.2, 0.34 + q * 0.04], [0, q * 0.3, 0]);
+  }
+  // Sleeve with segment bands
+  mesh(new THREE.CylinderGeometry(0.3, 0.27, 0.85, 32), M.armor, group, [0, -0.52, 0]);
+  for (let k = 0; k < 4; k++) {
+    mesh(new THREE.CylinderGeometry(0.31 - k * 0.008, 0.3 - k * 0.008, 0.07, 32), k % 2 ? M.armorGloss : M.armorDark, group, [0, -0.38 - k * 0.14, 0]);
+  }
+  for (let i = 0; i < 12; i++) {  // sleeve greebles
+    const a = rr(0, Math.PI * 2), y = rr(-0.9, -0.25);
+    const b = mesh(new THREE.BoxGeometry(rr(0.05, 0.12), rr(0.04, 0.1), 0.03), rand() < 0.15 ? M.tan : M.armorMid, group);
+    b.position.set(Math.sin(a) * 0.3, y, Math.cos(a) * 0.3); b.rotation.y = a;
+  }
+  // Cuff
+  mesh(new THREE.CylinderGeometry(0.3, 0.32, 0.12, 32), M.armorGloss, group, [0, -0.98, 0]);
+  mesh(new THREE.TorusGeometry(0.31, 0.012, 6, 32), M.tan, group, [0, -1.03, 0], [Math.PI / 2, 0, 0]);
+  // Gloved fist
+  const hand = new THREE.Group(); hand.position.set(0, -1.16, 0.02); group.add(hand);
+  mesh(new THREE.SphereGeometry(0.2, 24, 16), M.armorGloss, hand, [0, 0, 0], null, [0.85, 1, 0.95]);
+  for (let f = 0; f < 4; f++) {
+    mesh(new THREE.CapsuleGeometry(0.052, 0.07, 4, 10), M.armorGloss, hand, [(-0.02) * s, -0.1, 0.12 - f * 0.075], [0, 0, Math.PI / 2 * s], [1, 1, 1]);
+    mesh(new THREE.BoxGeometry(0.04, 0.04, 0.05), M.armorMid, hand, [0.13 * s, 0.0, 0.12 - f * 0.075]);  // knuckle plates
+  }
+  mesh(new THREE.CapsuleGeometry(0.05, 0.08, 4, 10), M.armorGloss, hand, [-0.1 * s, -0.02, 0.15], [0.5, 0, 0.3 * s]); // thumb
+  mesh(new THREE.BoxGeometry(0.03, 0.16, 0.2), M.armorMid, hand, [0.17 * s, 0.03, 0.02]);  // back-of-hand plate
+}
+buildArm(armR, 1);
+buildArm(armL, -1);
+
+/* =========================================================================
+   LEGS — baggy pants, white socks, black slide sandals
+   ========================================================================= */
+function buildLeg(s) {
+  const leg = new THREE.Group(); leg.position.set(0.44 * s, 0, 0); legs.add(leg);
+  // Pants with procedural folds
+  const pg = new THREE.CylinderGeometry(0.33, 0.27, 0.62, 48, 16);
+  const p = pg.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), a = Math.atan2(z, x);
+    const k = 1 + 0.045 * Math.sin(y * 22 + a * 2 + s) * Math.sin(a * 3) + 0.025 * Math.sin(a * 7 + y * 5);
+    p.setX(i, x * k); p.setZ(i, z * k);
+  }
+  pg.computeVertexNormals();
+  mesh(pg, M.pants, leg, [0, 0.8, 0]);
+  mesh(new THREE.TorusGeometry(0.27, 0.035, 10, 40), M.pants, leg, [0, 0.49, 0], [Math.PI / 2, 0, 0]);   // rolled cuff
+  // Sock with ribbing
+  mesh(new THREE.CylinderGeometry(0.17, 0.16, 0.34, 32), M.sock, leg, [0, 0.32, 0.02]);
+  for (let k = 0; k < 4; k++) mesh(new THREE.TorusGeometry(0.17, 0.008, 6, 32), M.sock, leg, [0, 0.4 + k * 0.025, 0.02], [Math.PI / 2, 0, 0]);
+  // Foot
+  const foot = new THREE.Group(); foot.position.set(0.04 * s, 0, 0.05); foot.rotation.y = 0.12 * s; leg.add(foot);
+  const soleShape = new THREE.Shape();
+  const w = 0.25, l = 0.44, r = 0.2;
+  soleShape.moveTo(-w + r, -l); soleShape.lineTo(w - r, -l); soleShape.quadraticCurveTo(w, -l, w, -l + r);
+  soleShape.lineTo(w, l - r); soleShape.quadraticCurveTo(w, l, w - r, l); soleShape.lineTo(-w + r, l);
+  soleShape.quadraticCurveTo(-w, l, -w, l - r); soleShape.lineTo(-w, -l + r); soleShape.quadraticCurveTo(-w, -l, -w + r, -l);
+  const ext = (d) => new THREE.ExtrudeGeometry(soleShape, { depth: d, bevelEnabled: true, bevelSize: 0.015, bevelThickness: 0.015, bevelSegments: 3 });
+  mesh(ext(0.05), M.sole, foot, [0, 0.015, 0.05], [-Math.PI / 2, 0, 0]);           // white outsole
+  mesh(ext(0.03), M.sandal, foot, [0, 0.08, 0.05], [-Math.PI / 2, 0, 0], [0.97, 0.97, 1]); // black footbed
+  mesh(new THREE.SphereGeometry(1, 32, 20), M.sock, foot, [0, 0.19, 0.08], null, [0.18, 0.12, 0.34]);   // socked foot
+  for (let t = 0; t < 4; t++) mesh(new THREE.SphereGeometry(0.045, 12, 8), M.sock, foot, [(-0.09 + t * 0.06), 0.15, 0.39 - Math.abs(t - 1.5) * 0.02]);
+  // Slide strap arching over the foot
+  const strap = mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.3, 32, 1, true, -Math.PI / 2, Math.PI), M.sandal, foot, [0, 0.1, 0.1], [-Math.PI / 2, 0, 0], [1, 1, 0.72]);
+  mesh(new THREE.BoxGeometry(0.16, 0.04, 0.01), M.sole, foot, [0, 0.27, 0.25], [-0.45, 0, 0]);   // strap logo tab
+}
+buildLeg(1); buildLeg(-1);
+
+/* =========================================================================
+   Shadows on everything
+   ========================================================================= */
+character.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+M.crack.depthWrite = true;
+
+/* =========================================================================
+   Idle animation
+   ========================================================================= */
+const clock = new THREE.Clock();
+function animate() {
+  const t = clock.getElapsedTime();
+  const breath = Math.sin(t * 1.6);
+  torso.scale.set(1 + breath * 0.008, 1 + breath * 0.012, 1 + breath * 0.012);
+  headPivot.position.y = 2.62 + breath * 0.018;
+  headPivot.rotation.z = Math.sin(t * 0.7) * 0.035;
+  headPivot.rotation.y = Math.sin(t * 0.45) * 0.08;
+  headPivot.rotation.x = Math.sin(t * 0.9) * 0.02;
+  armR.rotation.z = 0.2 + Math.sin(t * 1.6 + 0.4) * 0.025;
+  armL.rotation.z = -0.2 - Math.sin(t * 1.6 + 0.4) * 0.025;
+  armR.rotation.x = Math.sin(t * 0.8) * 0.03;
+  armL.rotation.x = -Math.sin(t * 0.8) * 0.03;
+  armR.position.y = armL.position.y = 2.28 + breath * 0.012;
+
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
